@@ -5,9 +5,12 @@ from confluent_kafka import Producer
 from confluent_kafka import Consumer, KafkaException, KafkaError
 
 
+producer_config = {
+    'bootstrap.servers': 'kafka:29092',
+    'client.id': 'python-producer'
+}
 
-
-kafka_config = {
+consumer_config = {
     'bootstrap.servers': 'localhost:29092',  # Список серверов Kafka
     'group.id': 'mygroup',                  # Идентификатор группы потребителей
     'auto.offset.reset': 'earliest'         # Начальная точка чтения ('earliest' или 'latest')
@@ -40,9 +43,10 @@ def create_consumer(config):
 
     def basic_consume_loop( topics):
         try:
+            print(f">>>> Привет !{type(consumer)}")
             # подписываемся на топик
             consumer.subscribe(topics)
-
+            
             while True:
                 msg = consumer.poll(timeout=1.0)
                 if msg is None: continue
@@ -68,8 +72,8 @@ def main_consumer(config, topics):
 
 if __name__ == '__main__':
 
-    # produce --message 'Hello World!' --topic 'hello_topic' --kafka 'localhost:29092'
-    # consume --topic 'hello_topic' --kafka 'localhost:29092'
+    # produce --message 'Hello World!' --topic 'hello_topic' --kafka 'kafka:29092'
+    # consume --topic 'hello_topic' --kafka 'kafka:29092'
 
     # Initialize parser
     parser = argparse.ArgumentParser()
@@ -86,9 +90,11 @@ if __name__ == '__main__':
     
 
     if (args.kafka):
-        kafka_config['bootstrap.servers'] = args.kafka
+        producer_config['bootstrap.servers'] = args.kafka
+        consumer_config['bootstrap.servers'] = args.kafka
 
     if args.command == 'produce':
-        main_producer(kafka_config, args.topic, args.message)
+        main_producer(producer_config, args.topic, args.message)
     elif args.command == 'consume':
-        main_consumer(kafka_config,[args.topic])
+        main_consumer(consumer_config,[args.topic])
+        # print(f'args.command: {args.command}, args.topic: {args.topic}')
