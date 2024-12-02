@@ -8,7 +8,7 @@ from confluent_kafka import Consumer, KafkaException, KafkaError
 
 
 kafka_config = {
-    'bootstrap.servers': 'localhost:9092',  # Список серверов Kafka
+    'bootstrap.servers': 'localhost:29092',  # Список серверов Kafka
     'group.id': 'mygroup',                  # Идентификатор группы потребителей
     'auto.offset.reset': 'earliest'         # Начальная точка чтения ('earliest' или 'latest')
 }
@@ -68,6 +68,8 @@ def main_consumer(config, topics):
 
 if __name__ == '__main__':
 
+    # produce --message 'Hello World!' --topic 'hello_topic' --kafka 'localhost:29092'
+    # consume --topic 'hello_topic' --kafka 'localhost:29092'
 
     # Initialize parser
     parser = argparse.ArgumentParser()
