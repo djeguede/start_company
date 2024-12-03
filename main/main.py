@@ -11,9 +11,10 @@ producer_config = {
 }
 
 consumer_config = {
-    'bootstrap.servers': 'localhost:29092',  # Список серверов Kafka
+    'bootstrap.servers': 'kafka:29092',  # Список серверов Kafka
     'group.id': 'mygroup',                  # Идентификатор группы потребителей
-    'auto.offset.reset': 'earliest'         # Начальная точка чтения ('earliest' или 'latest')
+    'auto.offset.reset': 'earliest'       # Начальная точка чтения ('earliest' или 'latest')
+    
 }
 
 
@@ -38,36 +39,33 @@ def main_producer(config, topic, message):
     send_message = create_producer(config)
     send_message(topic, message)
 
-def create_consumer(config):
-    consumer = Consumer(config)
 
-    def basic_consume_loop( topics):
-        try:
-            print(f">>>> Привет !{type(consumer)}")
-            # подписываемся на топик
-            consumer.subscribe(topics)
-            
-            while True:
-                msg = consumer.poll(timeout=1.0)
-                if msg is None: continue
-                if msg.error():
-                    if msg.error().code() == KafkaError._PARTITION_EOF:
-                        sys.stderr.write(f' {msg.topic()} [{msg.partition()}] reached end at offset {msg.offset()}\n' )
-                    elif msg.error():
-                        raise KafkaException(msg.error())
-                else:
-                    print(f"Received message: {msg.value().decode('utf-8')}")
-        except KeyboardInterrupt:
-            pass
-        finally:
-            consumer.close()
+    
+def basic_consume_loop(consumer, topics):
+    try:
+        # подписываемся на топик
+        consumer.subscribe(topics)
+        
+        while True:
+            msg = consumer.poll(timeout=1.0)
+            if msg is None: continue
+            if msg.error():
+                if msg.error().code() == KafkaError._PARTITION_EOF:
+                    sys.stderr.write(f' {msg.topic()} [{msg.partition()}] reached end at offset {msg.offset()}\n' )
+                elif msg.error():
+                    raise KafkaException(msg.error())
+            else:
+                print(f"Received message: {msg.value().decode('utf-8')}")
+    except KeyboardInterrupt:
+        pass
+    finally:
+        consumer.close()
 
-    return basic_consume_loop
+    
 
 def main_consumer(config, topics):
-
-    consumer_loop = create_consumer(config)
-    consumer_loop(topics)
+    consumer = Consumer(config)
+    basic_consume_loop(consumer, topics)
 
 
 if __name__ == '__main__':

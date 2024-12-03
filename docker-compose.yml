@@ -2,6 +2,9 @@ version: "3.9"
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    networks: 
+      - kafka_network
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -13,20 +16,25 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - 29092:29092
+      - '9092:9092'
+      - '29092:29092'
+    container_name: kafka
+    networks: 
+      - kafka_network
     hostname: kafka
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
-
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTERNAL://kafka:29092, LISTENER_EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTERNAL:PLAINTEXT, LISTENER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   kafka-ui:
     image: provectuslabs/kafka-ui
     container_name: kafka-ui
+    networks: 
+      - kafka_network
     ports:
       - 8090:8080
     restart: always
@@ -43,8 +51,13 @@ services:
       context: ./main
       dockerfile: Dockerfile
     image: djeguede/start_company
+    networks: 
+      - kafka_network
     ports:
       - 8080:8080
     links:
       - kafka-ui
 
+networks:
+  kafka_network:
+    name: kafka_docker_example_net
